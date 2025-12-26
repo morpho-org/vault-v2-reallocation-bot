@@ -1,0 +1,12 @@
+query getVaultsV2BasicData($address: String!, $chainId: Int!) {
+  vaultV2ByAddress(address: $address, chainId: $chainId) {
+    adapters {
+      items {
+        address
+        type
+      }
+    }
+    totalAssets
+    idleAssets
+  }
+}

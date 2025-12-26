@@ -1,0 +1,32 @@
+query GetMarketV1AdapterPositions($address: String!, $chainId: Int!) {
+  marketPositions(where: { userAddress_in: [$address], chainId_in: [$chainId] }) {
+    items {
+      state {
+        supplyAssets
+      }
+      market {
+        uniqueKey
+        collateralAsset {
+          address
+        }
+        loanAsset {
+          address
+        }
+        oracle {
+          address
+        }
+        irmAddress
+        lltv
+        state {
+          supplyAssets
+          supplyShares
+          borrowAssets
+          borrowShares
+          rateAtTarget
+          fee
+          timestamp
+        }
+      }
+    }
+  }
+}
