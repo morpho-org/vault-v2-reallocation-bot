@@ -260,7 +260,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseAbsoluteCap",
-          args: [marketV1CapIdData(marketId1, adapter), cap],
+          args: [marketV1CapIdData(marketParams1, adapter), cap],
         }),
       ],
     }),
@@ -271,7 +271,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseRelativeCap",
-          args: [marketV1CapIdData(marketId1, adapter), WAD],
+          args: [marketV1CapIdData(marketParams1, adapter), WAD],
         }),
       ],
     }),
@@ -282,7 +282,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseAbsoluteCap",
-          args: [marketV1CapIdData(marketId2, adapter), cap],
+          args: [marketV1CapIdData(marketParams2, adapter), cap],
         }),
       ],
     }),
@@ -293,7 +293,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseRelativeCap",
-          args: [marketV1CapIdData(marketId2, adapter), WAD],
+          args: [marketV1CapIdData(marketParams2, adapter), WAD],
         }),
       ],
     }),
@@ -304,7 +304,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseAbsoluteCap",
-          args: [marketV1CapIdData(marketId3, adapter), cap],
+          args: [marketV1CapIdData(marketParams3, adapter), cap],
         }),
       ],
     }),
@@ -315,7 +315,7 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
         encodeFunctionData({
           abi: vaultV2Abi,
           functionName: "increaseRelativeCap",
-          args: [marketV1CapIdData(marketId3, adapter), WAD],
+          args: [marketV1CapIdData(marketParams3, adapter), WAD],
         }),
       ],
     }),
@@ -357,32 +357,32 @@ export async function setupVault(client: AnvilTestClient, cap: bigint, suppliedA
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseAbsoluteCap",
-      args: [marketV1CapIdData(marketId1, adapter), cap],
+      args: [marketV1CapIdData(marketParams1, adapter), cap],
     }),
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseRelativeCap",
-      args: [marketV1CapIdData(marketId1, adapter), WAD],
+      args: [marketV1CapIdData(marketParams1, adapter), WAD],
     }),
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseAbsoluteCap",
-      args: [marketV1CapIdData(marketId2, adapter), cap],
+      args: [marketV1CapIdData(marketParams2, adapter), cap],
     }),
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseRelativeCap",
-      args: [marketV1CapIdData(marketId2, adapter), WAD],
+      args: [marketV1CapIdData(marketParams2, adapter), WAD],
     }),
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseAbsoluteCap",
-      args: [marketV1CapIdData(marketId3, adapter), cap],
+      args: [marketV1CapIdData(marketParams3, adapter), cap],
     }),
     encodeFunctionData({
       abi: vaultV2Abi,
       functionName: "increaseRelativeCap",
-      args: [marketV1CapIdData(marketId3, adapter), WAD],
+      args: [marketV1CapIdData(marketParams3, adapter), WAD],
     }),
   );
 

@@ -1,7 +1,7 @@
 import { Account, Chain, Client, Transport, type Address, type Hex } from "viem";
 
 import { apiSdk } from "../api/index.js";
-import type { Caps, MarketV1Data, VaultV2Data } from "./types";
+import type { Caps, MarketParamsV1, MarketV1Data, VaultV2Data } from "./types";
 import { readContract } from "viem/actions";
 import { vaultV2Abi } from "../../abis/VaultV2.js";
 import { marketV1CapId } from "./capsIds.js";
@@ -65,18 +65,18 @@ async function fetchMarketV1Data(
 
   return await Promise.all(
     marketV1AdapterPositions.marketPositions.items.map(async (position) => {
+      const params = {
+        loanToken: position.market.loanAsset.address,
+        collateralToken:
+          position.market.collateralAsset?.address ?? "0x0000000000000000000000000000000000000000",
+        oracle: position.market.oracle?.address ?? "0x0000000000000000000000000000000000000000",
+        irm: position.market.irmAddress,
+        lltv: BigInt(position.market.lltv),
+      };
       return {
         chainId: client.chain.id,
         id: position.market.uniqueKey as Hex,
-        params: {
-          loanToken: position.market.loanAsset.address,
-          collateralToken:
-            position.market.collateralAsset?.address ??
-            "0x0000000000000000000000000000000000000000",
-          oracle: position.market.oracle?.address ?? "0x0000000000000000000000000000000000000000",
-          irm: position.market.irmAddress,
-          lltv: BigInt(position.market.lltv),
-        },
+        params,
         state: {
           totalSupplyAssets: BigInt(position.market.state?.supplyAssets ?? "0"),
           totalSupplyShares: BigInt(position.market.state?.supplyShares ?? "0"),
@@ -85,12 +85,7 @@ async function fetchMarketV1Data(
           lastUpdate: BigInt(position.market.state?.timestamp ?? "0"),
           fee: BigInt(position.market.state?.fee ?? "0"),
         },
-        caps: await fetchMarketV1Caps(
-          vaultAddress,
-          position.market.uniqueKey as Hex,
-          adapterAddress,
-          client,
-        ),
+        caps: await fetchMarketV1Caps(vaultAddress, params, adapterAddress, client),
         vaultAssets: BigInt(position.state?.supplyAssets ?? "0"),
         rateAtTarget: BigInt(position.market.state?.rateAtTarget ?? "0"),
       };
@@ -100,11 +95,11 @@ async function fetchMarketV1Data(
 
 async function fetchMarketV1Caps(
   vaultAddress: Address,
-  marketId: Hex,
+  marketParams: MarketParamsV1,
   adapterAddress: Address,
   client: Client<Transport, Chain, Account>,
 ): Promise<Caps> {
-  const capId = marketV1CapId(marketId, adapterAddress);
+  const capId = marketV1CapId(marketParams, adapterAddress);
   const [absoluteCap, relativeCap] = await Promise.all([
     readContract(client, {
       address: vaultAddress,

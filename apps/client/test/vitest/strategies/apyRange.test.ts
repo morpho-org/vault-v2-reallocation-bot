@@ -76,7 +76,7 @@ class MinRatesTest extends ApyRange {
   }
 }
 
-describe("equilizeUtilizations strategy", () => {
+describe("apyRange strategy", () => {
   const strategy = new MinRatesTest(testConfig);
 
   const caps = parseUnits("100000", 6);
@@ -87,7 +87,7 @@ describe("equilizeUtilizations strategy", () => {
 
   const tolerance = parseUnits("0.01", 16); // We accept errors on the rates up to 1 BP
 
-  test.sequential("should equalize rates", async ({ client }) => {
+  test.sequential("should set rates within apy range", async ({ client }) => {
     const { vault, adapter } = await setupVault(client, caps, 3n * suppliedAmount);
 
     // reallocate
