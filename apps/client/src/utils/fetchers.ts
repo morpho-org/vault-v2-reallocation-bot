@@ -1,20 +1,10 @@
-import {
-  Account,
-  Chain,
-  Client,
-  encodeAbiParameters,
-  keccak256,
-  parseAbiParameters,
-  Transport,
-  type Address,
-  type Hex,
-} from "viem";
+import { Account, Chain, Client, Transport, type Address, type Hex } from "viem";
 
 import { apiSdk } from "../api/index.js";
-import type { Caps, MarketV1Data, VaultV2Data, VaultV2MarketV1Data } from "./types";
+import type { Caps, MarketV1Data, VaultV2Data } from "./types";
 import { readContract } from "viem/actions";
 import { vaultV2Abi } from "../../abis/VaultV2.js";
-import { formatMarketV1CapId } from "./marketV1.js";
+import { marketV1CapId } from "./capsIds.js";
 
 export async function fetchVaultData(
   address: Address,
@@ -114,7 +104,7 @@ async function fetchMarketV1Caps(
   adapterAddress: Address,
   client: Client<Transport, Chain, Account>,
 ): Promise<Caps> {
-  const capId = formatMarketV1CapId(marketId, adapterAddress);
+  const capId = marketV1CapId(marketId, adapterAddress);
   const [absoluteCap, relativeCap] = await Promise.all([
     readContract(client, {
       address: vaultAddress,

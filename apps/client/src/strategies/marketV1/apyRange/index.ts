@@ -10,7 +10,7 @@ import {
   rateToUtilization,
   utilizationToRate,
 } from "../../../utils/maths";
-import { VaultV2Data } from "../../../utils/types";
+import { MarketAllocation, VaultV2Data } from "../../../utils/types";
 import { Strategy } from "../../strategy";
 import {
   ALLOW_IDLE_REALLOCATION,
@@ -21,7 +21,7 @@ import {
   vaultsDefaultApyRanges,
   vaultsDefaultMinApsDeltaBips,
 } from "@vault-v2-reallocation-bot/config";
-import { encodeMarketParamsV1 } from "../../../utils/marketV1";
+import { encodeMarketParamsV1 } from "../utils";
 
 export class ApyRange implements Strategy {
   constructor() {}

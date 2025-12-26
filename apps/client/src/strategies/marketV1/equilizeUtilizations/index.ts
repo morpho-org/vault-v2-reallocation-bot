@@ -12,7 +12,7 @@ import {
   DEFAULT_MIN_UTILIZATION_DELTA_BIPS,
   vaultsMinUtilizationDeltaBips,
 } from "@vault-v2-reallocation-bot/config";
-import { encodeMarketParamsV1 } from "../../../utils/marketV1";
+import { encodeMarketParamsV1 } from "../utils";
 
 export class EquilizeUtilizations implements Strategy {
   findReallocation(vaultData: VaultV2Data) {

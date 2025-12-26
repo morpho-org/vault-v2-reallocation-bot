@@ -95,8 +95,8 @@ importers:
         specifier: ^5.0.7
         version: 5.0.7(graphql@16.12.0)
       '@morpho-org/test':
-        specifier: ^2.1.1
-        version: 2.6.5(viem@2.23.2(typescript@5.9.3))(vitest@3.2.4(@types/node@20.19.27)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: 2.1.1
+        version: 2.1.1(viem@2.23.2(typescript@5.9.3))(vitest@3.2.4(@types/node@20.19.27)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
       nock:
         specifier: ^14.0.2
         version: 14.0.10
@@ -1119,14 +1119,17 @@ packages:
   '@morpho-org/morpho-ts@2.4.6':
     resolution: {integrity: sha512-LWglkfjjU5xXOwNg8dog9g7+k42rBbgvx6xf1SBje8ZQOurhC+BB0yh/Jl/ArcTf/siiFeXDKievEhETZEo4jg==}
 
-  '@morpho-org/test@2.6.5':
-    resolution: {integrity: sha512-WJl0ulzMlGmk9mSgcCSN0rOKZIQTYEtxcUAhEadTTabPR+NL3Hm+nESGX9+oZqK8bN6ABQNRdf+rU3dVsglQ3A==}
+  '@morpho-org/test@2.1.1':
+    resolution: {integrity: sha512-bVjJH2KIfNZ0aFCJyXtbzGaXM4i/ZbN35eR1MtMAzMj8wI7neCzn5wsrWUIvOGuLkNcWeKybFHZlkG1Z7OJkzg==}
     peerDependencies:
       '@playwright/test': ^1.48.1
+      ethers: ^6.13.0
       viem: 2.23.2
-      vitest: '>=2.0.0 <5.0.0'
+      vitest: '>=2.0.0 <4.0.0'
     peerDependenciesMeta:
       '@playwright/test':
+        optional: true
+      ethers:
         optional: true
       vitest:
         optional: true
@@ -4543,7 +4546,7 @@ snapshots:
 
   '@morpho-org/morpho-ts@2.4.6': {}
 
-  '@morpho-org/test@2.6.5(viem@2.23.2(typescript@5.9.3))(vitest@3.2.4(@types/node@20.19.27)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))':
+  '@morpho-org/test@2.1.1(viem@2.23.2(typescript@5.9.3))(vitest@3.2.4(@types/node@20.19.27)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       lodash.kebabcase: 4.1.1
       viem: 2.23.2(typescript@5.9.3)
