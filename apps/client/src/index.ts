@@ -1,4 +1,4 @@
-import type { ChainConfig } from "@morpho-blue-reallocation-bot/config";
+import type { ChainConfig } from "@vault-v2-reallocation-bot/config";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -12,12 +12,7 @@ export const launchBot = (config: ChainConfig) => {
     account: privateKeyToAccount(config.reallocatorPrivateKey),
   });
 
-  const bot = new ReallocationBot(
-    config.chainId,
-    client,
-    config.vaultWhitelist,
-    new EquilizeUtilizations(),
-  );
+  const bot = new ReallocationBot(client, config.vaultWhitelist, new EquilizeUtilizations());
 
   // Run on startup.
   void bot.run();

@@ -1,4 +1,4 @@
-import { chainConfig, chains } from "@morpho-blue-reallocation-bot/config";
+import { chainConfig, chains } from "@vault-v2-reallocation-bot/config";
 import { launchBot } from ".";
 
 async function run() {
