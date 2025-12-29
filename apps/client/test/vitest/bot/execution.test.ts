@@ -223,26 +223,85 @@ describe("should test the reallocation execution", () => {
 
     // Mock GraphQL POST requests to Blue API
     nock("https://api.morpho.org")
+      .persist()
       .post("/graphql", (body) => {
-        // Match the getVaultsV2BasicData query
-        return (
-          body.query?.includes("getVaultsV2BasicData") &&
-          body.variables?.chainId === client.chain.id &&
-          body.variables?.address === vault
-        );
-      })
-      .reply(200, { data: vaultV2BasicDataResponse });
+        try {
+          const parsedBody =
+            typeof body === "string"
+              ? JSON.parse(body)
+              : body instanceof Buffer
+                ? JSON.parse(body.toString())
+                : body;
+          const bodyStr =
+            typeof body === "string"
+              ? body
+              : body instanceof Buffer
+                ? body.toString()
+                : JSON.stringify(body);
 
-    nock("https://api.morpho.org")
-      .post("/graphql", (body) => {
-        // Match the GetMarketV1AdapterPositions query
-        return (
-          body.query?.includes("GetMarketV1AdapterPositions") &&
-          body.variables?.chainId === client.chain.id &&
-          body.variables?.address === adapter
-        );
+          // Match the getVaultsV2BasicData query
+          if (
+            (parsedBody.operationName === "getVaultsV2BasicData" ||
+              bodyStr.includes("getVaultsV2BasicData")) &&
+            (parsedBody.variables?.chainId === client.chain.id ||
+              bodyStr.includes(`"chainId":${client.chain.id}`)) &&
+            (parsedBody.variables?.address === vault || bodyStr.includes(`"address":"${vault}"`))
+          ) {
+            return true;
+          }
+
+          // Match the GetMarketV1AdapterPositions query
+          if (
+            (parsedBody.operationName === "GetMarketV1AdapterPositions" ||
+              bodyStr.includes("GetMarketV1AdapterPositions")) &&
+            (parsedBody.variables?.chainId === client.chain.id ||
+              bodyStr.includes(`"chainId":${client.chain.id}`)) &&
+            (parsedBody.variables?.address === adapter ||
+              bodyStr.includes(`"address":"${adapter}"`))
+          ) {
+            return true;
+          }
+
+          return false;
+        } catch {
+          return false;
+        }
       })
-      .reply(200, { data: marketV1AdapterPositionsResponse });
+      .reply(200, (uri, requestBody) => {
+        try {
+          const parsedBody =
+            typeof requestBody === "string"
+              ? JSON.parse(requestBody)
+              : requestBody instanceof Buffer
+                ? JSON.parse(requestBody.toString())
+                : requestBody;
+          const bodyStr =
+            typeof requestBody === "string"
+              ? requestBody
+              : requestBody instanceof Buffer
+                ? requestBody.toString()
+                : JSON.stringify(requestBody);
+
+          // Return appropriate response based on which query was matched
+          if (
+            parsedBody.operationName === "getVaultsV2BasicData" ||
+            bodyStr.includes("getVaultsV2BasicData")
+          ) {
+            return { data: vaultV2BasicDataResponse };
+          }
+
+          if (
+            parsedBody.operationName === "GetMarketV1AdapterPositions" ||
+            bodyStr.includes("GetMarketV1AdapterPositions")
+          ) {
+            return { data: marketV1AdapterPositionsResponse };
+          }
+
+          return { data: {} };
+        } catch {
+          return { data: {} };
+        }
+      });
 
     const bot = new ReallocationBot(client, [vault], strategy);
 

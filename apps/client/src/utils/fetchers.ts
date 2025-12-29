@@ -16,8 +16,8 @@ export async function fetchVaultData(
   });
 
   const adapters = vaultV2ByAddress?.adapters?.items ?? [];
-  const totalAssets = vaultV2ByAddress?.totalAssets ?? 0n;
-  const idleAssets = vaultV2ByAddress?.idleAssets ?? 0n;
+  const totalAssets = BigInt(vaultV2ByAddress?.totalAssets ?? "0");
+  const idleAssets = BigInt(vaultV2ByAddress?.idleAssets ?? "0");
 
   const marketV1Adapter = adapters.find((adapter) => adapter.type === "MorphoMarketV1");
 
