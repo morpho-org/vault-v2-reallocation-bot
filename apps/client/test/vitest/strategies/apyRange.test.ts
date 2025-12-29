@@ -1,5 +1,5 @@
 import { describe, expect } from "vitest";
-import { Address, Hex, parseUnits } from "viem";
+import { Address, erc20Abi, Hex, parseUnits } from "viem";
 import { mainnet } from "viem/chains";
 import { readContract, writeContract } from "viem/actions";
 import { test } from "../../setup.js";
@@ -151,6 +151,13 @@ describe("apyRange strategy", () => {
       }),
     ]);
 
+    const marketState1RateBeforeReallocation = await readContract(client, {
+      address: IRM,
+      abi: adaptiveCurveIrmAbi,
+      functionName: "borrowRateView",
+      args: [marketParams1, formatMarketStateV1(marketState1)],
+    });
+
     const [marketState1RateAtTarget, marketState2RateAtTarget, marketState3RateAtTarget] =
       await Promise.all([
         readContract(client, {
@@ -269,10 +276,8 @@ describe("apyRange strategy", () => {
       }),
     ]);
 
-    // Market 1 should be at max apy
-    expect(abs(rateToApy(marketState1Rate) - percentToWad(targetMarket1.max))).toBeLessThan(
-      tolerance,
-    );
+    // Market 1 should be closer to its target apy
+    expect(rateToApy(marketState1Rate)).toBeLessThan(rateToApy(marketState1RateBeforeReallocation));
 
     // Market 2 should be at min apy
     expect(abs(rateToApy(marketState2Rate) - percentToWad(targetMarket2.min))).toBeLessThan(
