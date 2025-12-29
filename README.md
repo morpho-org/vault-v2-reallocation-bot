@@ -59,10 +59,6 @@ export const chains: { chain: Chain; strategy: StrategyName }[] = [
 
 ### Secrets
 
-**Database secrets (optional):**
-
-- `POSTGRES_DATABASE_URL`: The URL of the postgres database that will be used by the bot. If not set, the bot will launch a docker container with a local postgres database.
-
 **Chain secrets:**
 
 For each chain, the following secrets must be set:
@@ -90,7 +86,7 @@ Example for mainnet (chainId 1):
 ```
 RPC_URL_1=https://eth-mainnet.g.alchemy.com/v2/<your-alchemy-api-key>
 REALLOCATOR_PRIVATE_KEY_1=0x1234567890123456789012345678901234567890123456789012345678901234
-VAULT_WHITELIST_1=0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183,0x8eB67A509616cd6A7c1B3c8C21D48FF57df3d458
+VAULT_WHITELIST_1=0xbeef0046fcab1dE47E41fB75BB3dC4Dfc94108E3,0xbeef003C68896c7D2c3c60d363e8d71a49Ab2bf9
 EXECUTION_INTERVAL_1=900
 ```
 
@@ -101,7 +97,7 @@ This configuration is handled in the `apps/config/src/strategies` folder, which 
 
 ## Reallocation Strategy
 
-The bot uses by default an `EquilizeUtilizations` strategy that:
+This streategy:
 
 1. Calculates a target utilization rate across all markets within a vault
 2. Identifies markets with higher-than-target and lower-than-target utilization
@@ -109,8 +105,6 @@ The bot uses by default an `EquilizeUtilizations` strategy that:
 4. Only executes reallocations when the utilization delta exceeds a minimum threshold (2.5% by default)
 
 ## Apy Range Strategy
-
-The bot can also use the `ApyRange` strategy.
 
 This strategy tries to keep vaults listed markets borrow APY within the ranges defined in `apps/config/src/strategies/apyRange.ts`.
 Ranges can be defined at the global level, at the vaults level, or/and at the markets level.
