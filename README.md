@@ -41,7 +41,21 @@ pnpm install
 
 ## Chain Configuration
 
-The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed and supported by the Morpho API. The chain configuration is done in the `apps/config/config.ts` file. Just fill the array with the chains where you want the bot to run.
+The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed and supported by the Morpho API. Chain configuration is done in the `apps/config/config.ts` file.
+
+In this file, you'll define an array of chain configurations. Each entry specifies:
+
+- The chain to run the bot on
+- The strategy to use for that chain
+
+You can use different strategies for different chains. For example:
+
+```typescript
+export const chains: { chain: Chain; strategy: StrategyName }[] = [
+  { chain: mainnet, strategy: "equilizeUtilizations" },
+  { chain: base, strategy: "apyRange" },
+];
+```
 
 ### Secrets
 
@@ -96,10 +110,28 @@ The bot uses by default an `EquilizeUtilizations` strategy that:
 
 ## Apy Range Strategy
 
-The bot can also use the `ApyRange` strategy (if you change the strategy passed to the bot in the `apps/client/src/index.ts` file).
+The bot can also use the `ApyRange` strategy.
 
 This strategy tries to keep vaults listed markets borrow APY within the ranges defined in `apps/config/src/strategies/apyRange.ts`.
 Ranges can be defined at the global level, at the vaults level, or/and at the markets level.
+
+## Add Your strategy
+
+**If you don't plan on supporting a new pricer venue, you can ignore this section.**
+
+To add your own strategy, you need to create a new folder in the `apps/client/src/strategy` folder, named after your strategy.
+This folder should contain one `index.ts` file. In this file you will implement the new strategy class that needs to implements the `Strategy` interface (located in `apps/client/src/strategies/strategy.ts`).
+This class will contain the logic of the strategy, and needs to export one method: `findReallocation`(Returns a `Reallocation` typed object). This methods can be async.
+
+Next, you'll need to:
+
+1. Update the `StrategyName` type in `apps/config/src/types.ts` by adding your strategy name to it.
+2. Update the `createStrategy` function in `apps/client/src/strategies/factory.ts` to include your strategy.
+
+Additionally:
+
+- If your strategy requires vault, chain, or other specific configuration, add a configuration file named after your strategy in the `apps/config/src/strategies` folder.
+- If your strategy requires any ABIs, add them to a new file in the `apps/client/src/abis` folder.
 
 ## Run the bot
 

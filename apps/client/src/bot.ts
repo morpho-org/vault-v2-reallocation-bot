@@ -13,7 +13,7 @@ import { vaultV2Abi } from "../abis/VaultV2.js";
 
 import { Strategy } from "./strategies/strategy.js";
 import { fetchVaultData } from "./utils/fetchers.js";
-import { Reallocation, ReallocationAction } from "./utils/types.js";
+import { Reallocation, ReallocationAction, VaultV2Data } from "./utils/types.js";
 
 export class ReallocationBot {
   private client: Client<Transport, Chain, Account>;
@@ -31,9 +31,15 @@ export class ReallocationBot {
 
   async run() {
     const { client } = this;
-    const vaultsData = await Promise.all(
-      this.vaultWhitelist.map(async (vaultAddress) => fetchVaultData(vaultAddress, client)),
-    );
+    let vaultsData: VaultV2Data[] = [];
+    try {
+      vaultsData = await Promise.all(
+        this.vaultWhitelist.map(async (vaultAddress) => fetchVaultData(vaultAddress, client)),
+      );
+    } catch (error) {
+      console.error("Error fetching vaults data", error);
+      return;
+    }
 
     await Promise.all(
       vaultsData.map(async (vaultData) => {
