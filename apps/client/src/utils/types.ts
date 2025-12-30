@@ -66,3 +66,10 @@ export type MarketAllocation = {
   marketParams: MarketParamsV1;
   assets: bigint;
 };
+
+export type MarketV1CapAPIData = {
+  id: Hex;
+  idData: Hex;
+  absoluteCap: bigint;
+  relativeCap: bigint;
+};

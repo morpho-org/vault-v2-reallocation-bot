@@ -25,6 +25,8 @@ import {
 } from "../vaultSetup.js";
 import { encodeReallocation } from "../helpers.js";
 import { encodeMarketParamsV1 } from "../../../src/strategies/marketV1/utils.js";
+import { marketV1CapId, marketV1CapIdData } from "../../../src/utils/capsIds.js";
+import { WAD } from "../../../src/utils/maths.js";
 
 describe("should test the reallocation execution", () => {
   const strategy = new EquilizeUtilizations();
@@ -126,6 +128,31 @@ describe("should test the reallocation execution", () => {
         },
         totalAssets: totalAssets.toString(),
         idleAssets: idleAssets.toString(),
+        caps: {
+          items: [
+            {
+              type: "MarketV1" as const,
+              id: marketV1CapId(marketParams1, adapter),
+              idData: marketV1CapIdData(marketParams1, adapter),
+              absoluteCap: caps.toString(),
+              relativeCap: WAD.toString(),
+            },
+            {
+              type: "MarketV1" as const,
+              id: marketV1CapId(marketParams2, adapter),
+              idData: marketV1CapIdData(marketParams2, adapter),
+              absoluteCap: caps.toString(),
+              relativeCap: WAD.toString(),
+            },
+            {
+              type: "MarketV1" as const,
+              id: marketV1CapId(marketParams3, adapter),
+              idData: marketV1CapIdData(marketParams3, adapter),
+              absoluteCap: caps.toString(),
+              relativeCap: WAD.toString(),
+            },
+          ],
+        },
       },
     } as unknown as GetVaultsV2BasicDataQuery;
 
@@ -252,8 +279,8 @@ describe("should test the reallocation execution", () => {
 
           // Match the GetMarketV1AdapterPositions query
           if (
-            (parsedBody.operationName === "GetMarketV1AdapterPositions" ||
-              bodyStr.includes("GetMarketV1AdapterPositions")) &&
+            (parsedBody.operationName === "getMarketV1AdapterPositions" ||
+              bodyStr.includes("getMarketV1AdapterPositions")) &&
             (parsedBody.variables?.chainId === client.chain.id ||
               bodyStr.includes(`"chainId":${client.chain.id}`)) &&
             (parsedBody.variables?.address === adapter ||
@@ -291,8 +318,8 @@ describe("should test the reallocation execution", () => {
           }
 
           if (
-            parsedBody.operationName === "GetMarketV1AdapterPositions" ||
-            bodyStr.includes("GetMarketV1AdapterPositions")
+            parsedBody.operationName === "getMarketV1AdapterPositions" ||
+            bodyStr.includes("getMarketV1AdapterPositions")
           ) {
             return { data: marketV1AdapterPositionsResponse };
           }

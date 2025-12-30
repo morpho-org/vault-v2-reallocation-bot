@@ -1,4 +1,4 @@
-query GetMarketV1AdapterPositions($address: String!, $chainId: Int!) {
+query getMarketV1AdapterPositions($address: String!, $chainId: Int!) {
   marketPositions(where: { userAddress_in: [$address], chainId_in: [$chainId] }) {
     items {
       state {

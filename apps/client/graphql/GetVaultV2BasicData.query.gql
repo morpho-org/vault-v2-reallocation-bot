@@ -8,5 +8,14 @@ query getVaultsV2BasicData($address: String!, $chainId: Int!) {
     }
     totalAssets
     idleAssets
+    caps {
+      items {
+        type
+        id
+        idData
+        absoluteCap
+        relativeCap
+      }
+    }
   }
 }

@@ -1,0 +1,27 @@
+query getMissingMarketsData($uniqueKeys: [String!]!, $chainId: Int!) {
+  markets(where: { uniqueKey_in: $uniqueKeys, chainId_in: [$chainId] }) {
+    items {
+      uniqueKey
+      collateralAsset {
+        address
+      }
+      loanAsset {
+        address
+      }
+      oracle {
+        address
+      }
+      irmAddress
+      lltv
+      state {
+        supplyAssets
+        supplyShares
+        borrowAssets
+        borrowShares
+        rateAtTarget
+        fee
+        timestamp
+      }
+    }
+  }
+}
