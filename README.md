@@ -70,9 +70,9 @@ For each chain, the following secrets must be set:
 
 - `VAULT_WHITELIST`: List of vaults addresses.
 
-**Execution Interval**: The bot will run once every N seconds, with this value as N:
+**Execution Interval**: The bot will run once every N minutes, with this value as N:
 
-- `EXECUTION_INTERVAL`: Seconds to wait between runs.
+- `EXECUTION_INTERVAL`: Minutes to wait between runs.
 
 The secrets must be set in the `.env` file at the root of the repository, with the following keys:
 
@@ -87,7 +87,7 @@ Example for mainnet (chainId 1):
 RPC_URL_1=https://eth-mainnet.g.alchemy.com/v2/<your-alchemy-api-key>
 REALLOCATOR_PRIVATE_KEY_1=0x1234567890123456789012345678901234567890123456789012345678901234
 VAULT_WHITELIST_1=0xbeef0046fcab1dE47E41fB75BB3dC4Dfc94108E3,0xbeef003C68896c7D2c3c60d363e8d71a49Ab2bf9
-EXECUTION_INTERVAL_1=900
+EXECUTION_INTERVAL_1=10
 ```
 
 ### Strategies config

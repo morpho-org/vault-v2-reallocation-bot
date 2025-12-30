@@ -18,8 +18,11 @@ export const launchBot = (config: ChainConfig) => {
   // Run on startup.
   void bot.run();
 
-  // Thereafter, run every `executionInterval` seconds.
-  setInterval(() => {
-    void bot.run();
-  }, config.executionInterval * 1000);
+  // Thereafter, run every `executionInterval` minutes.
+  setInterval(
+    () => {
+      void bot.run();
+    },
+    config.executionInterval * 60 * 1000,
+  );
 };
