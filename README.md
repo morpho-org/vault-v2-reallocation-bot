@@ -97,7 +97,7 @@ This configuration is handled in the `apps/config/src/strategies` folder, which 
 
 ## Reallocation Strategy
 
-This streategy:
+This strategy:
 
 1. Calculates a target utilization rate across all markets within a vault
 2. Identifies markets with higher-than-target and lower-than-target utilization
@@ -121,6 +121,7 @@ Next, you'll need to:
 
 1. Update the `StrategyName` type in `apps/config/src/types.ts` by adding your strategy name to it.
 2. Update the `createStrategy` function in `apps/client/src/strategies/factory.ts` to include your strategy.
+3. Update the exports in `apps/client/src/strategies/index.ts` to include your strategy.
 
 Additionally:
 

@@ -1,6 +1,7 @@
 {
   "name": "@vault-v2-reallocation-bot/config",
   "version": "0.0.1",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
