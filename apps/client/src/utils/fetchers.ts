@@ -1,184 +1,156 @@
-import { Account, Chain, Client, Transport, type Address, type Hex } from "viem";
-import { VaultV2CapType } from "@morpho-org/blue-api-sdk";
-import { apiSdk } from "../api/index.js";
-import type { MarketV1CapAPIData, MarketV1Data, VaultV2Data } from "./types";
+import { Account, Chain, Client, Transport, zeroAddress, type Address, type Hex } from "viem";
+import { readContract } from "viem/actions";
+import type { MarketV1Data, VaultV2Data } from "./types";
 import { marketV1CapId } from "./capsIds.js";
+import { toAssetsDown } from "./maths.js";
+import { morphoBlueAbi } from "../abis/MorphoBlue.js";
+import { adaptiveCurveIrmAbi } from "../abis/AdaptiveCurveIrm.js";
+import { morphoMarketV1AdapterV2Abi } from "../abis/MorphoMarketV1AdapterV2.js";
+import { vaultV2Abi } from "../../abis/VaultV2.js";
+
+/** Morpho Blue singleton address (deterministic deployment, same on all chains). */
+const MORPHO = "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb" as const;
 
 export async function fetchVaultData(
   address: Address,
   client: Client<Transport, Chain, Account>,
 ): Promise<VaultV2Data> {
-  const { vaultV2ByAddress } = await apiSdk.getVaultsV2BasicData({
-    chainId: client.chain.id,
+  // Get adapter address (assume single MorphoMarketV1 adapter at index 0)
+  const adapterAddress = await readContract(client, {
     address,
+    abi: vaultV2Abi,
+    functionName: "adapters",
+    args: [0n],
   });
 
-  const marketV1Caps = (
-    vaultV2ByAddress?.caps?.items?.filter((cap) => cap.type === VaultV2CapType.MarketV1) ?? []
-  ).map((capItem) => {
-    return {
-      id: capItem.id,
-      idData: capItem.idData,
-      absoluteCap: BigInt(capItem.absoluteCap ?? "0"),
-      relativeCap: BigInt(capItem.relativeCap ?? "0"),
-    };
-  });
+  // Get total assets and market IDs length in parallel
+  const [totalAssets, marketIdsLength] = await Promise.all([
+    readContract(client, {
+      address,
+      abi: vaultV2Abi,
+      functionName: "totalAssets",
+    }),
+    readContract(client, {
+      address: adapterAddress,
+      abi: morphoMarketV1AdapterV2Abi,
+      functionName: "marketIdsLength",
+    }),
+  ]);
 
-  const adapters = vaultV2ByAddress?.adapters?.items ?? [];
-  const totalAssets = BigInt(vaultV2ByAddress?.totalAssets ?? "0");
-  const idleAssets = BigInt(vaultV2ByAddress?.idleAssets ?? "0");
+  // Fetch all market IDs from the adapter
+  const marketIds = await Promise.all(
+    Array.from({ length: Number(marketIdsLength) }, (_, i) =>
+      readContract(client, {
+        address: adapterAddress,
+        abi: morphoMarketV1AdapterV2Abi,
+        functionName: "marketIds",
+        args: [BigInt(i)],
+      }),
+    ),
+  );
 
-  const marketV1Adapter = adapters.find((adapter) => adapter.type === "MorphoMarketV1");
+  // Fetch all market data in parallel
+  const markets = await Promise.all(
+    marketIds.map(async (id): Promise<MarketV1Data> => {
+      // Fetch market params, market state, and adapter position in parallel
+      const [paramsResult, stateResult, positionResult] = await Promise.all([
+        readContract(client, {
+          address: MORPHO,
+          abi: morphoBlueAbi,
+          functionName: "idToMarketParams",
+          args: [id],
+        }),
+        readContract(client, {
+          address: MORPHO,
+          abi: morphoBlueAbi,
+          functionName: "market",
+          args: [id],
+        }),
+        readContract(client, {
+          address: MORPHO,
+          abi: morphoBlueAbi,
+          functionName: "position",
+          args: [id, adapterAddress],
+        }),
+      ]);
 
-  if (!marketV1Adapter) {
-    throw new Error("MarketV1Adapter not found");
-  }
+      const params = {
+        loanToken: paramsResult[0] as Address,
+        collateralToken: paramsResult[1] as Address,
+        oracle: paramsResult[2] as Address,
+        irm: paramsResult[3] as Address,
+        lltv: BigInt(paramsResult[4]),
+      };
 
-  if (marketV1Caps.length === 0) {
-    throw new Error("MarketV1 Caps not found");
-  }
+      const state = {
+        totalSupplyAssets: BigInt(stateResult[0]),
+        totalSupplyShares: BigInt(stateResult[1]),
+        totalBorrowAssets: BigInt(stateResult[2]),
+        totalBorrowShares: BigInt(stateResult[3]),
+        lastUpdate: BigInt(stateResult[4]),
+        fee: BigInt(stateResult[5]),
+      };
 
-  const marketV1AdapterPositions = await apiSdk.getMarketV1AdapterPositions({
-    address: marketV1Adapter.address,
-    chainId: client.chain.id,
-  });
+      const supplyShares = BigInt(positionResult[0]);
+      const vaultAssets = toAssetsDown(
+        supplyShares,
+        state.totalSupplyAssets,
+        state.totalSupplyShares,
+      );
 
-  if (!marketV1AdapterPositions.marketPositions?.items) {
-    throw new Error("MarketV1AdapterPositions not found");
-  }
+      // Get caps using the computed cap id
+      const capId = marketV1CapId(params, adapterAddress);
+      const [absoluteCap, relativeCap] = await Promise.all([
+        readContract(client, {
+          address,
+          abi: vaultV2Abi,
+          functionName: "absoluteCap",
+          args: [capId],
+        }),
+        readContract(client, {
+          address,
+          abi: vaultV2Abi,
+          functionName: "relativeCap",
+          args: [capId],
+        }),
+      ]);
 
-  const marketsV1Data = {
-    adapterAddress: marketV1Adapter.address,
-    markets: await fetchMarketV1Data(client, marketV1Adapter.address, marketV1Caps),
-  };
+      // Get rateAtTarget if the market uses an IRM (irm is not the zero address)
+      let rateAtTarget = 0n;
+      if (params.irm !== zeroAddress) {
+        const rateAtTargetResult = await readContract(client, {
+          address: params.irm,
+          abi: adaptiveCurveIrmAbi,
+          functionName: "rateAtTarget",
+          args: [id],
+        });
+        rateAtTarget = BigInt(rateAtTargetResult);
+      }
+
+      return {
+        chainId: client.chain.id,
+        id: id as Hex,
+        params,
+        state,
+        caps: { absolute: BigInt(absoluteCap), relative: BigInt(relativeCap) },
+        vaultAssets,
+        rateAtTarget,
+      };
+    }),
+  );
+
+  // Calculate idle assets: totalAssets minus sum of all market allocations
+  const allocatedAssets = markets.reduce((acc, m) => acc + m.vaultAssets, 0n);
+  const totalAssetsBigInt = BigInt(totalAssets);
+  const idleAssets = totalAssetsBigInt > allocatedAssets ? totalAssetsBigInt - allocatedAssets : 0n;
 
   return {
     vaultAddress: address,
-    totalAssets: totalAssets,
-    idleAssets: idleAssets,
-    marketsV1Data: marketsV1Data,
-  };
-}
-
-/// MARKET V1
-
-async function fetchMarketV1Data(
-  client: Client<Transport, Chain, Account>,
-  adapterAddress: Address,
-  marketV1Caps: MarketV1CapAPIData[],
-): Promise<MarketV1Data[]> {
-  const markets = await getAdapterMarkets(client, adapterAddress, marketV1Caps);
-
-  const missingCaps = marketV1Caps.filter(
-    (cap) => !markets.some((market) => marketV1CapId(market.params, adapterAddress) === cap.id),
-  );
-
-  if (missingCaps.length > 0) {
-    const missingMarkets = await getMissingMarketsData(
-      client,
-      missingCaps.map((cap) => cap.id),
+    totalAssets: totalAssetsBigInt,
+    idleAssets,
+    marketsV1Data: {
       adapterAddress,
-      marketV1Caps,
-    );
-    return [...markets, ...missingMarkets];
-  }
-
-  return markets;
-}
-
-async function getAdapterMarkets(
-  client: Client<Transport, Chain, Account>,
-  adapterAddress: Address,
-  marketV1Caps: MarketV1CapAPIData[],
-): Promise<MarketV1Data[]> {
-  const marketV1AdapterPositions = await apiSdk.getMarketV1AdapterPositions({
-    address: adapterAddress,
-    chainId: client.chain.id,
-  });
-
-  if (!marketV1AdapterPositions.marketPositions?.items) {
-    throw new Error("MarketV1AdapterPositions not found");
-  }
-
-  return await Promise.all(
-    marketV1AdapterPositions.marketPositions.items.map(async (position) => {
-      const params = {
-        loanToken: position.market.loanAsset.address,
-        collateralToken:
-          position.market.collateralAsset?.address ?? "0x0000000000000000000000000000000000000000",
-        oracle: position.market.oracle?.address ?? "0x0000000000000000000000000000000000000000",
-        irm: position.market.irmAddress,
-        lltv: BigInt(position.market.lltv),
-      };
-      const caps = marketV1Caps.find((cap) => cap.id === marketV1CapId(params, adapterAddress)) ?? {
-        absoluteCap: 0n,
-        relativeCap: 0n,
-      };
-      return {
-        chainId: client.chain.id,
-        id: position.market.uniqueKey as Hex,
-        params,
-        state: {
-          totalSupplyAssets: BigInt(position.market.state?.supplyAssets ?? "0"),
-          totalSupplyShares: BigInt(position.market.state?.supplyShares ?? "0"),
-          totalBorrowAssets: BigInt(position.market.state?.borrowAssets ?? "0"),
-          totalBorrowShares: BigInt(position.market.state?.borrowShares ?? "0"),
-          lastUpdate: BigInt(position.market.state?.timestamp ?? "0"),
-          fee: BigInt(position.market.state?.fee ?? "0"),
-        },
-        caps: { absolute: caps.absoluteCap, relative: caps.relativeCap },
-        vaultAssets: BigInt(position.state?.supplyAssets ?? "0"),
-        rateAtTarget: BigInt(position.market.state?.rateAtTarget ?? "0"),
-      };
-    }),
-  );
-}
-
-async function getMissingMarketsData(
-  client: Client<Transport, Chain, Account>,
-  ids: Hex[],
-  adapterAddress: Address,
-  marketV1Caps: MarketV1CapAPIData[],
-): Promise<MarketV1Data[]> {
-  const missingMarkets = await apiSdk.getMissingMarketsData({
-    uniqueKeys: ids,
-    chainId: client.chain.id,
-  });
-
-  if (!missingMarkets.markets?.items) {
-    throw new Error("MissingMarkets not found");
-  }
-
-  return await Promise.all(
-    missingMarkets.markets.items.map(async (market) => {
-      const params = {
-        loanToken: market.loanAsset.address,
-        collateralToken:
-          market.collateralAsset?.address ?? "0x0000000000000000000000000000000000000000",
-        oracle: market.oracle?.address ?? "0x0000000000000000000000000000000000000000",
-        irm: market.irmAddress,
-        lltv: BigInt(market.lltv),
-      };
-      const caps = marketV1Caps.find((cap) => cap.id === marketV1CapId(params, adapterAddress)) ?? {
-        absoluteCap: 0n,
-        relativeCap: 0n,
-      };
-      return {
-        chainId: client.chain.id,
-        id: market.uniqueKey as Hex,
-        params,
-        state: {
-          totalSupplyAssets: BigInt(market.state?.supplyAssets ?? "0"),
-          totalSupplyShares: BigInt(market.state?.supplyShares ?? "0"),
-          totalBorrowAssets: BigInt(market.state?.borrowAssets ?? "0"),
-          totalBorrowShares: BigInt(market.state?.borrowShares ?? "0"),
-          lastUpdate: BigInt(market.state?.timestamp ?? "0"),
-          fee: BigInt(market.state?.fee ?? "0"),
-        },
-        caps: { absolute: caps.absoluteCap, relative: caps.relativeCap },
-        vaultAssets: 0n,
-        rateAtTarget: BigInt(market.state?.rateAtTarget ?? "0"),
-      };
-    }),
-  );
+      markets,
+    },
+  };
 }

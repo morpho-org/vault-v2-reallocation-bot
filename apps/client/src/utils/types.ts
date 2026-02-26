@@ -67,9 +67,3 @@ export type MarketAllocation = {
   assets: bigint;
 };
 
-export type MarketV1CapAPIData = {
-  id: Hex;
-  idData: Hex;
-  absoluteCap: bigint;
-  relativeCap: bigint;
-};
