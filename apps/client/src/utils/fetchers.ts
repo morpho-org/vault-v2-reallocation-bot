@@ -1,20 +1,19 @@
-import { Account, Chain, Client, Transport, zeroAddress, type Address, type Hex } from "viem";
+import { Account, Chain, Client, Transport, type Address, type Hex } from "viem";
 import { readContract } from "viem/actions";
+import { MarketId } from "@morpho-org/blue-sdk";
+import { fetchMarket, fetchPosition } from "@morpho-org/blue-sdk-viem";
 import type { MarketV1Data, VaultV2Data } from "./types";
 import { marketV1CapId } from "./capsIds.js";
 import { toAssetsDown } from "./maths.js";
-import { morphoBlueAbi } from "../abis/MorphoBlue.js";
-import { adaptiveCurveIrmAbi } from "../abis/AdaptiveCurveIrm.js";
 import { morphoMarketV1AdapterV2Abi } from "../abis/MorphoMarketV1AdapterV2.js";
 import { vaultV2Abi } from "../../abis/VaultV2.js";
-
-/** Morpho Blue singleton address (deterministic deployment, same on all chains). */
-const MORPHO = "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb" as const;
 
 export async function fetchVaultData(
   address: Address,
   client: Client<Transport, Chain, Account>,
 ): Promise<VaultV2Data> {
+  const chainId = client.chain.id;
+
   // Get adapter address (assume single MorphoMarketV1 adapter at index 0)
   const adapterAddress = await readContract(client, {
     address,
@@ -49,54 +48,40 @@ export async function fetchVaultData(
     ),
   );
 
+  const now = BigInt(Math.floor(Date.now() / 1000));
+
   // Fetch all market data in parallel
   const markets = await Promise.all(
     marketIds.map(async (id): Promise<MarketV1Data> => {
-      // Fetch market params, market state, and adapter position in parallel
-      const [paramsResult, stateResult, positionResult] = await Promise.all([
-        readContract(client, {
-          address: MORPHO,
-          abi: morphoBlueAbi,
-          functionName: "idToMarketParams",
-          args: [id],
+      const marketId = id as MarketId;
+
+      // Fetch market data and adapter position in parallel using blue-sdk
+      const [market, position] = await Promise.all([
+        fetchMarket(marketId, client, {
+          chainId,
+          deployless: false,
         }),
-        readContract(client, {
-          address: MORPHO,
-          abi: morphoBlueAbi,
-          functionName: "market",
-          args: [id],
-        }),
-        readContract(client, {
-          address: MORPHO,
-          abi: morphoBlueAbi,
-          functionName: "position",
-          args: [id, adapterAddress],
+        fetchPosition(adapterAddress, marketId, client, {
+          chainId,
         }),
       ]);
 
-      const params = {
-        loanToken: paramsResult[0] as Address,
-        collateralToken: paramsResult[1] as Address,
-        oracle: paramsResult[2] as Address,
-        irm: paramsResult[3] as Address,
-        lltv: BigInt(paramsResult[4]),
-      };
+      // Accrue interest to get up-to-date market state
+      const accruedMarket = market.accrueInterest(now);
 
-      const state = {
-        totalSupplyAssets: BigInt(stateResult[0]),
-        totalSupplyShares: BigInt(stateResult[1]),
-        totalBorrowAssets: BigInt(stateResult[2]),
-        totalBorrowShares: BigInt(stateResult[3]),
-        lastUpdate: BigInt(stateResult[4]),
-        fee: BigInt(stateResult[5]),
-      };
-
-      const supplyShares = BigInt(positionResult[0]);
       const vaultAssets = toAssetsDown(
-        supplyShares,
-        state.totalSupplyAssets,
-        state.totalSupplyShares,
+        position.supplyShares,
+        accruedMarket.totalSupplyAssets,
+        accruedMarket.totalSupplyShares,
       );
+
+      const params = {
+        loanToken: accruedMarket.params.loanToken,
+        collateralToken: accruedMarket.params.collateralToken,
+        oracle: accruedMarket.params.oracle,
+        irm: accruedMarket.params.irm,
+        lltv: accruedMarket.params.lltv,
+      };
 
       // Get caps using the computed cap id
       const capId = marketV1CapId(params, adapterAddress);
@@ -115,26 +100,21 @@ export async function fetchVaultData(
         }),
       ]);
 
-      // Get rateAtTarget if the market uses an IRM (irm is not the zero address)
-      let rateAtTarget = 0n;
-      if (params.irm !== zeroAddress) {
-        const rateAtTargetResult = await readContract(client, {
-          address: params.irm,
-          abi: adaptiveCurveIrmAbi,
-          functionName: "rateAtTarget",
-          args: [id],
-        });
-        rateAtTarget = BigInt(rateAtTargetResult);
-      }
-
       return {
-        chainId: client.chain.id,
+        chainId,
         id: id as Hex,
         params,
-        state,
+        state: {
+          totalSupplyAssets: accruedMarket.totalSupplyAssets,
+          totalSupplyShares: accruedMarket.totalSupplyShares,
+          totalBorrowAssets: accruedMarket.totalBorrowAssets,
+          totalBorrowShares: accruedMarket.totalBorrowShares,
+          lastUpdate: accruedMarket.lastUpdate,
+          fee: accruedMarket.fee,
+        },
         caps: { absolute: BigInt(absoluteCap), relative: BigInt(relativeCap) },
         vaultAssets,
-        rateAtTarget,
+        rateAtTarget: accruedMarket.rateAtTarget ?? 0n,
       };
     }),
   );

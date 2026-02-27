@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@morpho-org/blue-sdk": "^5.12.1",
+    "@morpho-org/blue-sdk-viem": "^4.2.1",
     "@vault-v2-reallocation-bot/config": "workspace:*"
   },
   "devDependencies": {
