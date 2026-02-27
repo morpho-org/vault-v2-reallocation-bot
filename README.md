@@ -1,6 +1,6 @@
 # Vault v2 Reallocation Bot
 
-A simple, fast, and easily deployable reallocation bot for the **Morpho Vaults v2**. This bot is entirely based on **RPC calls and the Morpho API** and is designed to automate Morpho vaults v1 reallocations according customable strategies.
+A simple, fast, and easily deployable reallocation bot for the **Morpho Vaults v2**. This bot is entirely based on **RPC calls** and is designed to automate Morpho vaults v1 reallocations according customable strategies.
 
 ## Features
 
@@ -41,7 +41,7 @@ pnpm install
 
 ## Chain Configuration
 
-The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed and supported by the Morpho API. Chain configuration is done in the `apps/config/config.ts` file.
+The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed. Chain configuration is done in the `apps/config/config.ts` file.
 
 In this file, you'll define an array of chain configurations. Each entry specifies:
 
