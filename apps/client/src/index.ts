@@ -12,8 +12,7 @@ export const launchBot = (config: ChainConfig) => {
     account: privateKeyToAccount(config.reallocatorPrivateKey),
   });
 
-  const strategy = createStrategy(config.strategy);
-  const bot = new ReallocationBot(client, config.vaultWhitelist, strategy);
+  const bot = new ReallocationBot(client, config.vaultWhitelist, createStrategy(config.strategy));
 
   // Run on startup.
   void bot.run();
