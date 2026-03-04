@@ -75,10 +75,17 @@ export function getDepositableAmount(
   marketData: MarketV1Data,
   totalAssets: bigint,
   targetUtilization: bigint,
+  capBufferPercent: number,
 ) {
-  const amountToAbsoluteCap = marketData.caps.absolute - marketData.vaultAssets;
+  const bufferedAbsoluteCap = wMulDown(marketData.caps.absolute, percentToWad(capBufferPercent));
+  const amountToAbsoluteCap =
+    bufferedAbsoluteCap > marketData.vaultAssets ? bufferedAbsoluteCap - marketData.vaultAssets : 0n;
+  const bufferedRelativeCap = wMulDown(
+    wMulUp(totalAssets, marketData.caps.relative),
+    percentToWad(capBufferPercent),
+  );
   const amountToRelativeCap =
-    wMulUp(totalAssets, marketData.caps.relative) - marketData.vaultAssets;
+    bufferedRelativeCap > marketData.vaultAssets ? bufferedRelativeCap - marketData.vaultAssets : 0n;
   return min(
     getDepositToUtilization(marketData.state, targetUtilization),
     min(amountToAbsoluteCap, amountToRelativeCap),

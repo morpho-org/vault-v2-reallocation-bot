@@ -10,8 +10,8 @@
     "codegen": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "@vault-v2-reallocation-bot/config": "workspace:*",
     "@morpho-org/blue-api-sdk": "^2.17.2",
+    "@vault-v2-reallocation-bot/config": "workspace:*",
     "graphql-request": "^7.4.0",
     "graphql-tag": "^2.12.6"
   },
@@ -22,6 +22,7 @@
     "@graphql-codegen/typescript-graphql-request": "^6.3.0",
     "@graphql-codegen/typescript-operations": "^5.0.7",
     "@morpho-org/test": "2.1.1",
-    "nock": "^14.0.2"
+    "nock": "^14.0.2",
+    "tslib": "^2.8.1"
   }
 }

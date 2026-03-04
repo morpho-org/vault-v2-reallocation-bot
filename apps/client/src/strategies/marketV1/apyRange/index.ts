@@ -14,6 +14,7 @@ import { MarketAllocation, VaultV2Data } from "../../../utils/types";
 import { Strategy } from "../../strategy";
 import {
   ALLOW_IDLE_REALLOCATION,
+  CAP_BUFFER_PERCENT,
   DEFAULT_APY_RANGE,
   DEFAULT_MIN_APY_DELTA_BIPS,
   marketsApyRanges,
@@ -53,6 +54,7 @@ export class ApyRange implements Strategy {
           marketData,
           vaultData.totalAssets,
           upperUtilizationBound,
+          CAP_BUFFER_PERCENT,
         );
 
         const apyDelta =
@@ -106,7 +108,7 @@ export class ApyRange implements Strategy {
 
       if (utilization > upperUtilizationBound) {
         const toAllocate = min(
-          getDepositableAmount(marketData, vaultData.totalAssets, upperUtilizationBound),
+          getDepositableAmount(marketData, vaultData.totalAssets, upperUtilizationBound, CAP_BUFFER_PERCENT),
           remainingAmountToAllocate,
         );
         remainingAmountToAllocate -= toAllocate;

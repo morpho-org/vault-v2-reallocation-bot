@@ -9,6 +9,7 @@ import {
 import { MarketAllocation, VaultV2Data } from "../../../utils/types";
 import { Strategy } from "../../strategy";
 import {
+  CAP_BUFFER_PERCENT,
   DEFAULT_MIN_UTILIZATION_DELTA_BIPS,
   vaultsMinUtilizationDeltaBips,
 } from "@vault-v2-reallocation-bot/config";
@@ -42,6 +43,7 @@ export class EquilizeUtilizations implements Strategy {
           marketData,
           vaultData.totalAssets,
           targetUtilization,
+          CAP_BUFFER_PERCENT,
         );
       } else {
         totalAmountToDeallocate += getWithdrawableAmount(marketData, targetUtilization);
@@ -66,7 +68,7 @@ export class EquilizeUtilizations implements Strategy {
 
       if (utilization > targetUtilization) {
         const toAllocate = min(
-          getDepositableAmount(marketData, vaultData.totalAssets, targetUtilization),
+          getDepositableAmount(marketData, vaultData.totalAssets, targetUtilization, CAP_BUFFER_PERCENT),
           remainingAmountToAllocate,
         );
         remainingAmountToAllocate -= toAllocate;
