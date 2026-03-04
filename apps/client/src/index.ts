@@ -17,6 +17,8 @@ export const launchBot = (config: ChainConfig) => {
   // Run on startup.
   void bot.run();
 
+  console.log(`Bot running on chain ${config.chain.name} with strategy ${config.strategy}`);
+
   // Thereafter, run every `executionInterval` minutes.
   setInterval(
     () => {

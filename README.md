@@ -15,6 +15,7 @@ This is the v0 of the bot, so it makes strong assumptions about the vaults' conf
 
 - Vaults are expected to have only one adapter, which must be a [MorphoMarketV1AdapterV2](https://github.com/morpho-org/vault-v2/blob/main/src/adapters/MorphoMarketV1AdapterV2.sol).
 - Vaults are expected to have meaningful caps only at the market V1 level. Caps on collaterals or on the adapter should be maxed (or very high), as the vault won't consider them reachable.
+- Each configured market must have some assets allocated to it (even just 1 wei) before the bot is started. The bot discovers markets by reading the adapter's market list and their on-chain positions; a market with zero allocation will not be detected. After setting the caps, allocate a small amount to every market so the bot can manage them.
 
 These constraints will be removed in future versions as more adapters are whitelisted by the Morpho Registry List.
 
