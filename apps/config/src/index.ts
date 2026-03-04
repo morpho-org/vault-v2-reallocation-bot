@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import type { Address, Chain, Hex } from "viem";
-import { chains } from "./config";
+import { CAP_BUFFER_PERCENT, chains } from "./config";
 import type { ChainConfig, StrategyName } from "./types";
 
 dotenv.config();
@@ -47,5 +47,5 @@ export function getSecrets(chain: Chain) {
   };
 }
 
-export { type ChainConfig, type StrategyName, chains };
+export { CAP_BUFFER_PERCENT, type ChainConfig, type StrategyName, chains };
 export * from "./strategies";
