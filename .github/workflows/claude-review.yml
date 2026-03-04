@@ -16,11 +16,12 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -41,5 +42,4 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: sonnet
-          claude_code_config_file: .claude/ci-settings.json
+          claude_args: "--model claude-sonnet-4-5-20250929 --config .claude/ci-settings.json"
