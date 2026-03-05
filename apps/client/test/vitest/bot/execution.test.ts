@@ -1,5 +1,5 @@
 import { parseUnits } from "viem";
-import { describe, expect } from "vitest";
+import { describe, expect, vi, afterEach } from "vitest";
 import { EquilizeUtilizations } from "../../../src/strategies/marketV1/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
 import { WBTC, MORPHO } from "../../constants.js";
@@ -18,10 +18,13 @@ import {
   prepareBorrow,
   borrow,
 } from "../vaultSetup.js";
-import { encodeReallocation } from "../helpers.js";
+import { encodeReallocation, syncTimestamp } from "../helpers.js";
 import { encodeMarketParamsV1 } from "../../../src/strategies/marketV1/utils.js";
 
 describe("should test the reallocation execution", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   const strategy = new EquilizeUtilizations();
 
   const caps = parseUnits("100000", 6);
@@ -103,6 +106,8 @@ describe("should test the reallocation execution", () => {
 
     // first market is at 100% utilization
     expect(marketState1[2]).toBe(marketState1[0]);
+
+    await syncTimestamp(client);
 
     const bot = new ReallocationBot(client, [vault], strategy);
 
