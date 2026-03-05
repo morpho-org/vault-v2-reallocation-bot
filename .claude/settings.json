@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git tag:*)",
+      "Bash(git stash:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm build:config:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:strategies:*)",
+      "Bash(pnpm test:execution:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm --filter:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh pr:*)"
+    ],
+    "deny": [
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(pnpm publish:*)",
+      "Bash(pnpm reallocate:*)",
+      "Bash(rm -rf:*)"
+    ]
+  }
+}
