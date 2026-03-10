@@ -2,7 +2,7 @@ import { Account, Chain, Client, Transport, type Address, type Hex } from "viem"
 import { VaultV2CapType } from "@morpho-org/blue-api-sdk";
 import { apiSdk } from "../api/index.js";
 import type { MarketV1CapAPIData, MarketV1Data, VaultV2Data } from "./types";
-import { marketV1CapId } from "./capsIds.js";
+import { decodeMarketV1CapIdData, marketV1CapId, marketV1UniqueKey } from "./capsIds.js";
 
 export async function fetchVaultData(
   address: Address,
@@ -76,7 +76,10 @@ async function fetchMarketV1Data(
   if (missingCaps.length > 0) {
     const missingMarkets = await getMissingMarketsData(
       client,
-      missingCaps.map((cap) => cap.id),
+      missingCaps.map((cap) => {
+        const { marketParams } = decodeMarketV1CapIdData(cap.idData);
+        return marketV1UniqueKey(marketParams);
+      }),
       adapterAddress,
       marketV1Caps,
     );
