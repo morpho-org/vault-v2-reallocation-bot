@@ -113,10 +113,12 @@ export class ApyRange implements Strategy {
         );
         remainingAmountToAllocate -= toAllocate;
 
-        allocations.push({
-          marketParams: marketData.params,
-          assets: toAllocate,
-        });
+        if (toAllocate > 0n) {
+          allocations.push({
+            marketParams: marketData.params,
+            assets: toAllocate,
+          });
+        }
       } else if (utilization < lowerUtilizationBound) {
         const toDeallocate = min(
           getWithdrawableAmount(marketData, lowerUtilizationBound),
@@ -124,13 +126,15 @@ export class ApyRange implements Strategy {
         );
         remainingAmountToDeallocate -= toDeallocate;
 
-        deallocations.push({
-          marketParams: marketData.params,
-          assets: toDeallocate,
-        });
+        if (toDeallocate > 0n) {
+          deallocations.push({
+            marketParams: marketData.params,
+            assets: toDeallocate,
+          });
+        }
       }
 
-      if (remainingAmountToDeallocate === 0n && remainingAmountToDeallocate === 0n) break;
+      if (remainingAmountToDeallocate === 0n && remainingAmountToAllocate === 0n) break;
     }
 
     return {
