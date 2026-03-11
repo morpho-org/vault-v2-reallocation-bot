@@ -6,23 +6,14 @@
   "scripts": {
     "dev": "tsc && concurrently \"tsc --watch\" \"node dist/client/src/index.js\"",
     "lint": "eslint . --fix",
-    "typecheck": "tsc --noEmit",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@morpho-org/blue-api-sdk": "^2.17.2",
-    "@vault-v2-reallocation-bot/config": "workspace:*",
-    "graphql-request": "^7.4.0",
-    "graphql-tag": "^2.12.6"
+    "@morpho-org/blue-sdk": "^5.12.1",
+    "@morpho-org/blue-sdk-viem": "^4.2.1",
+    "@vault-v2-reallocation-bot/config": "workspace:*"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^6.1.0",
-    "@graphql-codegen/import-types-preset": "^3.0.1",
-    "@graphql-codegen/typescript": "^5.0.7",
-    "@graphql-codegen/typescript-graphql-request": "^6.3.0",
-    "@graphql-codegen/typescript-operations": "^5.0.7",
-    "@morpho-org/test": "2.1.1",
-    "nock": "^14.0.2",
-    "tslib": "^2.8.1"
+    "@morpho-org/test": "2.1.1"
   }
 }

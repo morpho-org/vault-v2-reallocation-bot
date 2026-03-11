@@ -1,6 +1,5 @@
-import nock from "nock";
 import { parseUnits } from "viem";
-import { describe, expect } from "vitest";
+import { describe, expect, vi, afterEach } from "vitest";
 import { EquilizeUtilizations } from "../../../src/strategies/marketV1/equilizeUtilizations/index.js";
 import { readContract, writeContract } from "viem/actions";
 import { WBTC, MORPHO } from "../../constants.js";
@@ -8,10 +7,6 @@ import { morphoBlueAbi } from "../../abis/MorphoBlue.js";
 import { vaultV2Abi } from "../../../abis/VaultV2.js";
 import { ReallocationBot } from "../../../src/bot.js";
 import { test } from "../../setup.js";
-import type {
-  GetVaultsV2BasicDataQuery,
-  GetMarketV1AdapterPositionsQuery,
-} from "../../../src/api/types.js";
 import {
   setupVault,
   marketParams1,
@@ -23,12 +18,13 @@ import {
   prepareBorrow,
   borrow,
 } from "../vaultSetup.js";
-import { encodeReallocation } from "../helpers.js";
+import { encodeReallocation, syncTimestamp } from "../helpers.js";
 import { encodeMarketParamsV1 } from "../../../src/strategies/marketV1/utils.js";
-import { marketV1CapId, marketV1CapIdData } from "../../../src/utils/capsIds.js";
-import { WAD } from "../../../src/utils/maths.js";
 
 describe("should test the reallocation execution", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   const strategy = new EquilizeUtilizations();
 
   const caps = parseUnits("100000", 6);
@@ -111,224 +107,7 @@ describe("should test the reallocation execution", () => {
     // first market is at 100% utilization
     expect(marketState1[2]).toBe(marketState1[0]);
 
-    // Calculate total assets and idle assets
-    const totalAssets = 3n * suppliedAmount;
-    const idleAssets = 0n; // All allocated
-
-    // Mock getVaultsV2BasicData query
-    const vaultV2BasicDataResponse = {
-      vaultV2ByAddress: {
-        adapters: {
-          items: [
-            {
-              address: adapter,
-              type: "MorphoMarketV1" as const,
-            },
-          ],
-        },
-        totalAssets: totalAssets.toString(),
-        idleAssets: idleAssets.toString(),
-        caps: {
-          items: [
-            {
-              type: "MarketV1" as const,
-              id: marketV1CapId(marketParams1, adapter),
-              idData: marketV1CapIdData(marketParams1, adapter),
-              absoluteCap: caps.toString(),
-              relativeCap: WAD.toString(),
-            },
-            {
-              type: "MarketV1" as const,
-              id: marketV1CapId(marketParams2, adapter),
-              idData: marketV1CapIdData(marketParams2, adapter),
-              absoluteCap: caps.toString(),
-              relativeCap: WAD.toString(),
-            },
-            {
-              type: "MarketV1" as const,
-              id: marketV1CapId(marketParams3, adapter),
-              idData: marketV1CapIdData(marketParams3, adapter),
-              absoluteCap: caps.toString(),
-              relativeCap: WAD.toString(),
-            },
-          ],
-        },
-      },
-    } as unknown as GetVaultsV2BasicDataQuery;
-
-    // Mock GetMarketV1AdapterPositions query
-    const marketV1AdapterPositionsResponse = {
-      marketPositions: {
-        items: [
-          {
-            state: {
-              supplyAssets: suppliedAmount.toString(),
-            },
-            market: {
-              uniqueKey: marketId1 as any,
-              collateralAsset: {
-                address: marketParams1.collateralToken,
-              },
-              loanAsset: {
-                address: marketParams1.loanToken,
-              },
-              oracle: {
-                address: marketParams1.oracle,
-              },
-              irmAddress: marketParams1.irm,
-              lltv: marketParams1.lltv.toString(),
-              state: {
-                supplyAssets: marketState1[0].toString(),
-                supplyShares: marketState1[1].toString(),
-                borrowAssets: marketState1[2].toString(),
-                borrowShares: marketState1[3].toString(),
-                rateAtTarget: "0",
-                fee: Number(marketState1[5]),
-                timestamp: marketState1[4].toString(),
-              },
-            },
-          },
-          {
-            state: {
-              supplyAssets: suppliedAmount.toString(),
-            },
-            market: {
-              uniqueKey: marketId2 as any,
-              collateralAsset: {
-                address: marketParams2.collateralToken,
-              },
-              loanAsset: {
-                address: marketParams2.loanToken,
-              },
-              oracle: {
-                address: marketParams2.oracle,
-              },
-              irmAddress: marketParams2.irm,
-              lltv: marketParams2.lltv.toString(),
-              state: {
-                supplyAssets: marketState2[0].toString(),
-                supplyShares: marketState2[1].toString(),
-                borrowAssets: marketState2[2].toString(),
-                borrowShares: marketState2[3].toString(),
-                rateAtTarget: "0",
-                fee: Number(marketState2[5]),
-                timestamp: marketState2[4].toString(),
-              },
-            },
-          },
-          {
-            state: {
-              supplyAssets: suppliedAmount.toString(),
-            },
-            market: {
-              uniqueKey: marketId3 as any,
-              collateralAsset: {
-                address: marketParams3.collateralToken,
-              },
-              loanAsset: {
-                address: marketParams3.loanToken,
-              },
-              oracle: {
-                address: marketParams3.oracle,
-              },
-              irmAddress: marketParams3.irm,
-              lltv: marketParams3.lltv.toString(),
-              state: {
-                supplyAssets: marketState3[0].toString(),
-                supplyShares: marketState3[1].toString(),
-                borrowAssets: marketState3[2].toString(),
-                borrowShares: marketState3[3].toString(),
-                rateAtTarget: "0",
-                fee: Number(marketState3[5]),
-                timestamp: marketState3[4].toString(),
-              },
-            },
-          },
-        ],
-      },
-    } as unknown as GetMarketV1AdapterPositionsQuery;
-
-    // Mock GraphQL POST requests to Blue API
-    nock("https://api.morpho.org")
-      .persist()
-      .post("/graphql", (body) => {
-        try {
-          const parsedBody =
-            typeof body === "string"
-              ? JSON.parse(body)
-              : body instanceof Buffer
-                ? JSON.parse(body.toString())
-                : body;
-          const bodyStr =
-            typeof body === "string"
-              ? body
-              : body instanceof Buffer
-                ? body.toString()
-                : JSON.stringify(body);
-
-          // Match the getVaultsV2BasicData query
-          if (
-            (parsedBody.operationName === "getVaultsV2BasicData" ||
-              bodyStr.includes("getVaultsV2BasicData")) &&
-            (parsedBody.variables?.chainId === client.chain.id ||
-              bodyStr.includes(`"chainId":${client.chain.id}`)) &&
-            (parsedBody.variables?.address === vault || bodyStr.includes(`"address":"${vault}"`))
-          ) {
-            return true;
-          }
-
-          // Match the GetMarketV1AdapterPositions query
-          if (
-            (parsedBody.operationName === "getMarketV1AdapterPositions" ||
-              bodyStr.includes("getMarketV1AdapterPositions")) &&
-            (parsedBody.variables?.chainId === client.chain.id ||
-              bodyStr.includes(`"chainId":${client.chain.id}`)) &&
-            (parsedBody.variables?.address === adapter ||
-              bodyStr.includes(`"address":"${adapter}"`))
-          ) {
-            return true;
-          }
-
-          return false;
-        } catch {
-          return false;
-        }
-      })
-      .reply(200, (uri, requestBody) => {
-        try {
-          const parsedBody =
-            typeof requestBody === "string"
-              ? JSON.parse(requestBody)
-              : requestBody instanceof Buffer
-                ? JSON.parse(requestBody.toString())
-                : requestBody;
-          const bodyStr =
-            typeof requestBody === "string"
-              ? requestBody
-              : requestBody instanceof Buffer
-                ? requestBody.toString()
-                : JSON.stringify(requestBody);
-
-          // Return appropriate response based on which query was matched
-          if (
-            parsedBody.operationName === "getVaultsV2BasicData" ||
-            bodyStr.includes("getVaultsV2BasicData")
-          ) {
-            return { data: vaultV2BasicDataResponse };
-          }
-
-          if (
-            parsedBody.operationName === "getMarketV1AdapterPositions" ||
-            bodyStr.includes("getMarketV1AdapterPositions")
-          ) {
-            return { data: marketV1AdapterPositionsResponse };
-          }
-
-          return { data: {} };
-        } catch {
-          return { data: {} };
-        }
-      });
+    await syncTimestamp(client);
 
     const bot = new ReallocationBot(client, [vault], strategy);
 

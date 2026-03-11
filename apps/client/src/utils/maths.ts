@@ -67,7 +67,7 @@ function getDepositToUtilization(marketState: MarketStateV1, targetUtilization: 
 export function getWithdrawableAmount(marketData: MarketV1Data, targetUtilization: bigint) {
   return min(
     getWithdrawalToUtilization(marketData.state, targetUtilization),
-    marketData.vaultAssets,
+    marketData.vaultAssets > 0n ? marketData.vaultAssets - 1n : 0n,
   );
 }
 

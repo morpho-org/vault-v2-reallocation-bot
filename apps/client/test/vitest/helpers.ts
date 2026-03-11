@@ -1,4 +1,6 @@
 import { encodeFunctionData, Address, Hex } from "viem";
+import { AnvilTestClient } from "@morpho-org/test";
+import { vi } from "vitest";
 import {
   MarketParamsV1,
   MarketStateV1,
@@ -22,6 +24,21 @@ export function formatMarketStateV1(
 }
 
 export const abs = (x: bigint) => (x < 0n ? -x : x);
+
+export const syncTimestamp = async (client: AnvilTestClient, timestamp?: bigint) => {
+  timestamp ??= (await client.timestamp()) + 60n;
+
+  vi.useFakeTimers({
+    now: Number(timestamp) * 1000,
+    toFake: ["Date"],
+  });
+
+  vi.setSystemTime(Number(timestamp) * 1000);
+
+  await client.setNextBlockTimestamp({ timestamp });
+
+  return timestamp;
+};
 
 export function encodeReallocation(reallocation: Reallocation): Hex[] {
   return [
