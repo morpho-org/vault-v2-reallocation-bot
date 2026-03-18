@@ -29,8 +29,9 @@ A reallocation bot for Morpho Vaults v2 that monitors vault states and executes 
 - `apps/client/src/abis/` - Contract ABI definitions
 
 ### Configuration
-- `apps/config/src/config.ts` - Chain and strategy assignments
+- `apps/config/src/config.ts` - Chain settings: strategy, vault whitelist, execution interval
 - `apps/config/src/types.ts` - `StrategyName`, `ChainConfig` types
+- `apps/config/src/config.ts:ChainSettings` - Per-chain config (strategy, vaultWhitelist, executionInterval)
 - `apps/config/src/strategies/` - Per-strategy configuration (thresholds, ranges, etc.)
 
 ### Key Types
@@ -113,13 +114,11 @@ All percentage and rate calculations use WAD (18 decimals). Helpers in `apps/cli
 
 ## Environment Configuration
 
-Per-chain environment variables in `.env` at repo root:
+Secrets are set per-chain in `.env` at repo root. Vault whitelist and execution interval are configured in `apps/config/src/config.ts`.
 
 ```bash
 RPC_URL_<chainId>=https://...
 REALLOCATOR_PRIVATE_KEY_<chainId>=0x...
-VAULT_WHITELIST_<chainId>=0xVault1,0xVault2
-EXECUTION_INTERVAL_<chainId>=10
 ```
 
 Example for mainnet (chainId 1) and Base (chainId 8453):
@@ -127,11 +126,7 @@ Example for mainnet (chainId 1) and Base (chainId 8453):
 ```bash
 RPC_URL_1=https://eth-mainnet.g.alchemy.com/v2/<key>
 REALLOCATOR_PRIVATE_KEY_1=0x1234...
-VAULT_WHITELIST_1=0xbeef...,0xdead...
-EXECUTION_INTERVAL_1=10
 
 RPC_URL_8453=https://mainnet.base.org
 REALLOCATOR_PRIVATE_KEY_8453=0x5678...
-VAULT_WHITELIST_8453=0xabcd...
-EXECUTION_INTERVAL_8453=30
 ```

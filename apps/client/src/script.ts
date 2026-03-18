@@ -2,9 +2,7 @@ import { chainConfig, chains } from "@vault-v2-reallocation-bot/config";
 import { launchBot } from ".";
 
 async function run() {
-  const configs = chains.map((chainMinimalConfig) =>
-    chainConfig(chainMinimalConfig.chain, chainMinimalConfig.strategy),
-  );
+  const configs = chains.map((chainSettings) => chainConfig(chainSettings));
 
   try {
     // biome-ignore lint/complexity/noForEach: <explanation>
