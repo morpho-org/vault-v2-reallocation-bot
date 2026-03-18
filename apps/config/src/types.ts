@@ -8,6 +8,6 @@ export interface ChainConfig {
   rpcUrl: string;
   vaultWhitelist: Address[];
   reallocatorPrivateKey: Hex;
-  executionInterval: number;
+  executionInterval: number; // minutes
   strategy: StrategyName;
 }

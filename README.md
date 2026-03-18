@@ -41,53 +41,49 @@ pnpm install
 
 ## Chain Configuration
 
-The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed and supported by the Morpho API. Chain configuration is done in the `apps/config/config.ts` file.
+The bot can be configured to run on any EVM-compatible chain where the Morpho v2 stack has been deployed and supported by the Morpho API. Chain configuration is done in the `apps/config/src/config.ts` file.
 
 In this file, you'll define an array of chain configurations. Each entry specifies:
 
-- The chain to run the bot on
-- The strategy to use for that chain
+- **chain**: The chain to run the bot on
+- **strategy**: The strategy to use for that chain
+- **vaultWhitelist**: The list of vault addresses to rebalance
+- **executionInterval**: Minutes between each bot run
 
 You can use different strategies for different chains. For example:
 
 ```typescript
-export const chains: { chain: Chain; strategy: StrategyName }[] = [
-  { chain: mainnet, strategy: "equilizeUtilizations" },
-  { chain: base, strategy: "apyRange" },
+export const chains: ChainSettings[] = [
+  {
+    chain: mainnet,
+    strategy: "equilizeUtilizations",
+    vaultWhitelist: [
+      "0xbeef0046fcab1dE47E41fB75BB3dC4Dfc94108E3",
+      "0xbeef003C68896c7D2c3c60d363e8d71a49Ab2bf9",
+    ],
+    executionInterval: 10,
+  },
+  {
+    chain: base,
+    strategy: "apyRange",
+    vaultWhitelist: ["0xabcd..."],
+    executionInterval: 30,
+  },
 ];
 ```
 
 ### Secrets
 
-**Chain secrets:**
+Secrets are set in the `.env` file at the root of the repository, keyed by chain ID:
 
-For each chain, the following secrets must be set:
-
-- `RPC_URL`: The RPC URL of the chain that will be used by the bot.
-- `REALLOCATOR_PRIVATE_KEY`: The private key of the EOA that will be used to execute the reallocations. This EAO must have the allocator role of all curated vaults.
-
-**Vault Whitelist**: The bot will only rebalance assets within vaults that are whitelisted:
-
-- `VAULT_WHITELIST`: List of vaults addresses.
-
-**Execution Interval**: The bot will run once every N minutes, with this value as N:
-
-- `EXECUTION_INTERVAL`: Minutes to wait between runs.
-
-The secrets must be set in the `.env` file at the root of the repository, with the following keys:
-
-- `RPC_URL_<chainId>`
-- `REALLOCATOR_PRIVATE_KEY_<chainId>`
-- `VAULT_WHITELIST_<chainId>`
-- `EXECUTION_INTERVAL_<chainId>`
+- `RPC_URL_<chainId>`: The RPC URL of the chain that will be used by the bot.
+- `REALLOCATOR_PRIVATE_KEY_<chainId>`: The private key of the EOA that will be used to execute the reallocations. This EOA must have the allocator role of all curated vaults.
 
 Example for mainnet (chainId 1):
 
 ```
 RPC_URL_1=https://eth-mainnet.g.alchemy.com/v2/<your-alchemy-api-key>
 REALLOCATOR_PRIVATE_KEY_1=0x1234567890123456789012345678901234567890123456789012345678901234
-VAULT_WHITELIST_1=0xbeef0046fcab1dE47E41fB75BB3dC4Dfc94108E3,0xbeef003C68896c7D2c3c60d363e8d71a49Ab2bf9
-EXECUTION_INTERVAL_1=10
 ```
 
 ### Strategies config
