@@ -54,6 +54,14 @@ export class EquilizeUtilizations implements Strategy {
         this.getMinUtilizationDeltaBips(marketData.chainId, marketData.id);
     }
 
+    if (totalAmountToDeallocate > totalAmountToAllocate) {
+      totalAmountToDeallocate = totalAmountToAllocate;
+    } else if (totalAmountToAllocate > totalAmountToDeallocate) {
+      totalAmountToAllocate =
+        totalAmountToDeallocate +
+        min(totalAmountToAllocate - totalAmountToDeallocate, vaultData.idleAssets);
+    }
+
     if (min(totalAmountToDeallocate, totalAmountToAllocate) === 0n || !didExceedMinUtilizationDelta)
       return;
 
