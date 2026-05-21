@@ -5,7 +5,7 @@ query getMarketV1AdapterPositions($address: String!, $chainId: Int!) {
         supplyAssets
       }
       market {
-        uniqueKey
+        uniqueKey: marketId
         collateralAsset {
           address
         }

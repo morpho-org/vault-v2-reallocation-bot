@@ -12,7 +12,7 @@ export const GetMarketV1AdapterPositionsDocument = gql`
         supplyAssets
       }
       market {
-        uniqueKey
+        uniqueKey: marketId
         collateralAsset {
           address
         }
@@ -42,7 +42,7 @@ export const GetMissingMarketsDataDocument = gql`
     query getMissingMarketsData($uniqueKeys: [String!]!, $chainId: Int!) {
   markets(where: {uniqueKey_in: $uniqueKeys, chainId_in: [$chainId]}) {
     items {
-      uniqueKey
+      uniqueKey: marketId
       collateralAsset {
         address
       }

@@ -2,5 +2,9 @@ packages:
   - "packages/*"
   - "apps/*"
 
+allowBuilds:
+  esbuild: true
+  unrs-resolver: true
+
 # 3 days (4320 minutes) — delay newly published packages to reduce supply-chain risk.
 minimumReleaseAge: 4320

@@ -1,7 +1,7 @@
 query getMissingMarketsData($uniqueKeys: [String!]!, $chainId: Int!) {
   markets(where: { uniqueKey_in: $uniqueKeys, chainId_in: [$chainId] }) {
     items {
-      uniqueKey
+      uniqueKey: marketId
       collateralAsset {
         address
       }
