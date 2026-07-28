@@ -1,4 +1,5 @@
 import { base, mainnet } from "viem/chains";
+import { MUSCADINE_VAULTS } from "../config";
 
 export type Range = {
   min: number;
@@ -32,6 +33,13 @@ export const vaultsDefaultApyRanges: Record<number, Record<string, Range>> = {
       min: 4.25,
       max: 6.25,
     },
+    // Muscadine — all vaults listed so any can switch onto apyRange later
+    [MUSCADINE_VAULTS.USDC_PRIME]: { min: 3, max: 8 },
+    [MUSCADINE_VAULTS.WETH_PRIME]: { min: 3, max: 8 },
+    [MUSCADINE_VAULTS.CBBTC_PRIME]: { min: 3, max: 8 },
+    [MUSCADINE_VAULTS.USDC_FRONTIER]: { min: 4, max: 12 },
+    [MUSCADINE_VAULTS.CBBTC_TEST]: { min: 3, max: 8 },
+    [MUSCADINE_VAULTS.USDC_TEST]: { min: 3, max: 8 },
   },
 };
 
